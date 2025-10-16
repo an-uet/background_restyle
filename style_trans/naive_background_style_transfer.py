@@ -15,20 +15,11 @@ from torchvision import models
 from style_trans.semantic_segmentation import SemanticSegmentation
 from style_trans.utils import IO
 
-# Pillow 10+ resample enum fallback
 try:
     RESAMPLE_LANCZOS = Image.Resampling.LANCZOS
 except AttributeError:
     RESAMPLE_LANCZOS = Image.LANCZOS
 
-
-# =============== VGG19 feature extractor (PyTorch) ===============
-# Map các layer theo VGG19 của torchvision.features:
-# conv1_1: 0, conv1_2: 2, pool: 4
-# conv2_1: 5, conv2_2: 7, pool: 9
-# conv3_1:10, conv3_2:12, conv3_3:14, conv3_4:16, pool:18
-# conv4_1:19, conv4_2:21, conv4_3:23, conv4_4:25, pool:27
-# conv5_1:28, conv5_2:30, conv5_3:32, conv5_4:34, pool:36
 
 VGG_IDX = {
     "block1_conv1": 0,
@@ -40,10 +31,6 @@ VGG_IDX = {
 }
 
 class VGG19Features(nn.Module):
-    """
-    Trả về danh sách kích hoạt theo thứ tự:
-    [style_layers..., content_layers...]
-    """
     def __init__(self, style_layers, content_layers):
         super().__init__()
         vgg = models.vgg19(weights=models.VGG19_Weights.IMAGENET1K_V1).features
@@ -51,7 +38,6 @@ class VGG19Features(nn.Module):
         for p in self.features.parameters():
             p.requires_grad = False
 
-        # Chuyển tên block->index
         self.style_ids = [VGG_IDX[name] for name in style_layers]
         self.content_ids = [VGG_IDX[name] for name in content_layers]
         self.return_ids = sorted(set(self.style_ids + self.content_ids))
@@ -69,10 +55,9 @@ class VGG19Features(nn.Module):
             if next_idx < len(self.return_ids) and i == self.return_ids[next_idx]:
                 outputs.append(cur)
                 next_idx += 1
-            # tối ưu sớm nếu đã có đủ
+
             if next_idx >= len(self.return_ids):
                 break
-        # reorder theo [style..., content...]
         style_feats = [outputs[pos] for pos in self.style_positions]
         content_feats = [outputs[pos] for pos in self.content_positions]
         return style_feats + content_feats

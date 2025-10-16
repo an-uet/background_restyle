@@ -1,10 +1,9 @@
 # -*- coding: utf-8 -*-
 import os
-import numpy as np
-from PIL import Image
 
+import numpy as np
 import torch
-from torchvision import models
+from PIL import Image
 from torchvision.models.segmentation import (
     deeplabv3_resnet50, DeepLabV3_ResNet50_Weights,
     deeplabv3_resnet101, DeepLabV3_ResNet101_Weights,
